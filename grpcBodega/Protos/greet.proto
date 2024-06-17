@@ -19,3 +19,40 @@ message HelloRequest {
 message HelloReply {
   string message = 1;
 }
+
+// The book service definition.
+service BookService {
+  // Returns a list of all books
+  rpc ConsultaLibros (Empty) returns (LibroList);
+
+  // Sells a specified quantity of a book
+  rpc VendeLibro (VentaRequest) returns (VentaResponse);
+}
+
+// The request message for selling a book.
+message VentaRequest {
+  int32 id = 1;
+  int32 cantidad = 2;
+}
+
+// The response message for selling a book.
+message VentaResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// The request message for an empty request.
+message Empty {}
+
+// The response message containing the list of books.
+message LibroList {
+  repeated Libro libros = 1;
+}
+
+// The message representing a book.
+message Libro {
+  int32 id = 1;
+  string titulo = 2;
+  int32 cantidad = 3;
+  int32 precio = 4;
+}
