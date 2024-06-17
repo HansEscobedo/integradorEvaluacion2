@@ -1,0 +1,3 @@
+# Ignorar directorios binarios generados
+bin/
+obj/
