@@ -4,22 +4,6 @@ option csharp_namespace = "grpcBodega";
 
 package greet;
 
-// The greeting service definition.
-service Greeter {
-  // Sends a greeting
-  rpc SayHello (HelloRequest) returns (HelloReply);
-}
-
-// The request message containing the user's name.
-message HelloRequest {
-  string name = 1;
-}
-
-// The response message containing the greetings.
-message HelloReply {
-  string message = 1;
-}
-
 // The book service definition.
 service BookService {
   // Returns a list of all books
@@ -28,6 +12,9 @@ service BookService {
   // Sells a specified quantity of a book
   rpc VendeLibro (VentaRequest) returns (VentaResponse);
 }
+
+// The request message for an empty request.
+message Empty {}
 
 // The request message for selling a book.
 message VentaRequest {
@@ -40,9 +27,6 @@ message VentaResponse {
   bool success = 1;
   string message = 2;
 }
-
-// The request message for an empty request.
-message Empty {}
 
 // The response message containing the list of books.
 message LibroList {

@@ -1,44 +1,54 @@
 using Grpc.Core;
 using grpcBodega;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
-namespace grpcBodega.Services;
-
-public class BookServiceImpl : BookService.BookServiceBase
+namespace grpcBodega.Services
 {
-    private readonly ILogger<BookServiceImpl> _logger;
-
-    public BookServiceImpl(ILogger<BookServiceImpl> logger)
+    public class BookServiceImpl : BookService.BookServiceBase
     {
-        _logger = logger;
-    }
+        private readonly ContextoLibreria _context;
+        private readonly ILogger<BookServiceImpl> _logger;
 
-    public override Task<LibroList> ConsultaLibros(Empty request, ServerCallContext context)
-    {
-        var response = new LibroList();
-        response.Libros.AddRange(LibroData.Libros.Select(libro => new Libro
+        public BookServiceImpl(ContextoLibreria context, ILogger<BookServiceImpl> logger)
         {
-            Id = libro.Id,
-            Titulo = libro.Titulo,
-            Cantidad = libro.Cantidad,
-            Precio = libro.Precio
-        }));
-        return Task.FromResult(response);
-    }
-
-    public override Task<VentaResponse> VendeLibro(VentaRequest request, ServerCallContext context)
-    {
-        var libro = LibroData.Libros.FirstOrDefault(l => l.Id == request.Id);
-        if (libro == null)
-        {
-            return Task.FromResult(new VentaResponse { Success = false, Message = "Libro no encontrado" });
+            _context = context;
+            _logger = logger;
         }
 
-        if (libro.Cantidad < request.Cantidad)
+        public override async Task<LibroList> ConsultaLibros(Empty request, ServerCallContext context)
         {
-            return Task.FromResult(new VentaResponse { Success = false, Message = "Cantidad insuficiente" });
+            var response = new LibroList();
+            var libros = await _context.Libros.ToListAsync();
+
+            response.Libros.AddRange(libros.Select(libro => new Libro
+            {
+                Id = libro.Id,
+                Titulo = libro.Titulo,
+                Cantidad = libro.Cantidad,
+                Precio = libro.Precio
+            }));
+
+            return response;
         }
 
-        libro.Cantidad -= request.Cantidad;
-        return Task.FromResult(new VentaResponse { Success = true, Message = "Venta realizada con éxito" });
+        public override async Task<VentaResponse> VendeLibro(VentaRequest request, ServerCallContext context)
+        {
+            var libro = await _context.Libros.FindAsync(request.Id);
+            if (libro == null)
+            {
+                return new VentaResponse { Success = false, Message = "Libro no encontrado" };
+            }
+
+            if (libro.Cantidad < request.Cantidad)
+            {
+                return new VentaResponse { Success = false, Message = "Cantidad insuficiente" };
+            }
+
+            libro.Cantidad -= request.Cantidad;
+            await _context.SaveChangesAsync();
+
+            return new VentaResponse { Success = true, Message = "Venta realizada con éxito" };
+        }
     }
 }
